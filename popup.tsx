@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react"
 import { BookmarkList } from "./components/BookmarkList"
 import { EmptyState } from "./components/EmptyState"
+import { SearchInput } from "./components/SearchInput"
 import type { Bookmark, StorageData } from "./types"
 
 export default function Popup() {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState<string>("")
 
   const [isSaving, setIsSaving] = useState<boolean>(false)
   const [successMessage, setSuccessMessage] = useState<string>("")
@@ -109,8 +111,13 @@ export default function Popup() {
       }
 
       // Create new bookmark object
+      const id =
+        typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+          ? crypto.randomUUID()
+          : Date.now().toString()
+
       const newBookmark: Bookmark = {
-        id: Date.now().toString(),
+        id,
         title: activeTab.title || "Untitled",
         url: activeTab.url,
         createdAt: new Date().toISOString(),
@@ -149,6 +156,14 @@ export default function Popup() {
     }
   }
 
+  const normalizedQuery = searchQuery.trim().toLowerCase()
+  const filteredBookmarks = bookmarks.filter((b) => {
+    if (!normalizedQuery) return true
+    const titleMatch = (b.title || "").toLowerCase().includes(normalizedQuery)
+    const urlMatch = (b.url || "").toLowerCase().includes(normalizedQuery)
+    return titleMatch || urlMatch
+  })
+
   return (
     <div style={styles.container}>
       <style>{`
@@ -186,6 +201,7 @@ export default function Popup() {
 
       <main style={styles.content}>
         <button
+          type="button"
           onClick={saveBookmark}
           disabled={isSaving}
           style={{
@@ -217,7 +233,21 @@ export default function Popup() {
         <section style={styles.section}>
           <div style={styles.sectionHeader}>
             <h2 style={styles.sectionTitle}>Saved Bookmarks</h2>
+            {normalizedQuery !== "" && (
+              <span style={styles.searchResultCount}>
+                {filteredBookmarks.length}{" "}
+                {filteredBookmarks.length === 1 ? "result" : "results"}
+              </span>
+            )}
           </div>
+
+          {!loading && !loadError && bookmarks.length > 0 && (
+            <SearchInput
+              value={searchQuery}
+              onChange={setSearchQuery}
+              onClear={() => setSearchQuery("")}
+            />
+          )}
 
           {loading ? (
             <div style={styles.loadingContainer}>
@@ -229,10 +259,12 @@ export default function Popup() {
               <span style={styles.icon}>⚠️</span> {loadError}
             </div>
           ) : bookmarks.length === 0 ? (
-            <EmptyState />
+            <EmptyState mode="empty" />
+          ) : filteredBookmarks.length === 0 ? (
+            <EmptyState mode="no-results" />
           ) : (
             <BookmarkList
-              bookmarks={bookmarks}
+              bookmarks={filteredBookmarks}
               onDelete={handleDeleteBookmark}
             />
           )}
@@ -371,6 +403,11 @@ const styles: Record<string, React.CSSProperties> = {
     margin: "0",
     textTransform: "uppercase",
     letterSpacing: "0.05em",
+  },
+  searchResultCount: {
+    fontSize: "12px",
+    fontWeight: "500",
+    color: "#6b7280",
   },
   loadingContainer: {
     display: "flex",

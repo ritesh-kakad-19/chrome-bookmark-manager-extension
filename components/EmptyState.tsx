@@ -1,15 +1,36 @@
 import React from "react"
 
-export function EmptyState() {
+interface EmptyStateProps {
+  mode?: "empty" | "no-results"
+  title?: string
+  subtitle?: string
+  icon?: string
+}
+
+export function EmptyState({
+  mode = "empty",
+  title,
+  subtitle,
+  icon,
+}: EmptyStateProps) {
+  const isNoResults = mode === "no-results"
+
+  const displayIcon = icon || (isNoResults ? "🔍" : "🔖")
+  const displayTitle =
+    title || (isNoResults ? "No bookmarks found" : "No bookmarks yet")
+  const displaySubtitle =
+    subtitle ||
+    (isNoResults
+      ? "Try a different search term."
+      : "Save your first webpage to see it here.")
+
   return (
     <div style={styles.container}>
       <div style={styles.iconWrapper}>
-        <span style={styles.icon}>🔖</span>
+        <span style={styles.icon}>{displayIcon}</span>
       </div>
-      <h3 style={styles.title}>No bookmarks yet</h3>
-      <p style={styles.subtitle}>
-        Save your first webpage to see it here.
-      </p>
+      <h3 style={styles.title}>{displayTitle}</h3>
+      <p style={styles.subtitle}>{displaySubtitle}</p>
     </div>
   )
 }
