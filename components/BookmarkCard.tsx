@@ -8,6 +8,7 @@ interface BookmarkCardProps {
 
 export function BookmarkCard({ bookmark, onDelete }: BookmarkCardProps) {
   const [faviconError, setFaviconError] = useState<boolean>(false)
+  const [isConfirming, setIsConfirming] = useState<boolean>(false)
 
   const getHostname = (urlStr: string): string => {
     try {
@@ -36,10 +37,28 @@ export function BookmarkCard({ bookmark, onDelete }: BookmarkCardProps) {
   const formattedDate = formatDate(bookmark.createdAt)
   const faviconUrl = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=32`
 
-  const handleOpen = () => {
+  const handleOpen = (e: React.MouseEvent) => {
+    e.stopPropagation()
     if (chrome?.tabs?.create && bookmark.url) {
       chrome.tabs.create({ url: bookmark.url })
+    } else if (bookmark.url) {
+      window.open(bookmark.url, "_blank")
     }
+  }
+
+  const handleInitiateDelete = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setIsConfirming(true)
+  }
+
+  const handleConfirmDelete = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    onDelete(bookmark.id)
+  }
+
+  const handleCancelDelete = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setIsConfirming(false)
   }
 
   return (
@@ -68,26 +87,54 @@ export function BookmarkCard({ bookmark, onDelete }: BookmarkCardProps) {
       </div>
 
       <div style={styles.footerRow}>
-        <span style={styles.date}>
-          {formattedDate ? `Saved: ${formattedDate}` : ""}
-        </span>
+        {!isConfirming ? (
+          <>
+            <span style={styles.date}>
+              {formattedDate ? `Saved: ${formattedDate}` : ""}
+            </span>
 
-        <div style={styles.actions}>
-          <button
-            onClick={handleOpen}
-            style={styles.openButton}
-            title="Open bookmark in new tab"
-          >
-            Open ↗
-          </button>
-          <button
-            onClick={() => onDelete(bookmark.id)}
-            style={styles.deleteButton}
-            title="Delete bookmark"
-          >
-            Delete
-          </button>
-        </div>
+            <div style={styles.actions}>
+              <button
+                type="button"
+                onClick={handleOpen}
+                style={styles.openButton}
+                title="Open bookmark in new tab"
+              >
+                Open ↗
+              </button>
+              <button
+                type="button"
+                onClick={handleInitiateDelete}
+                style={styles.deleteButton}
+                title="Delete bookmark"
+              >
+                Delete
+              </button>
+            </div>
+          </>
+        ) : (
+          <div style={styles.confirmRow}>
+            <span style={styles.confirmText}>Delete this bookmark?</span>
+            <div style={styles.actions}>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                style={styles.confirmDeleteButton}
+                title="Confirm deletion"
+              >
+                Confirm
+              </button>
+              <button
+                type="button"
+                onClick={handleCancelDelete}
+                style={styles.cancelButton}
+                title="Cancel deletion"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -188,6 +235,39 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#dc2626",
     backgroundColor: "#fef2f2",
     border: "1px solid #fecaca",
+    borderRadius: "6px",
+    cursor: "pointer",
+    transition: "background-color 0.15s ease",
+  },
+  confirmRow: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  confirmText: {
+    fontSize: "12px",
+    fontWeight: "600",
+    color: "#dc2626",
+  },
+  confirmDeleteButton: {
+    padding: "4px 10px",
+    fontSize: "12px",
+    fontWeight: "600",
+    color: "#ffffff",
+    backgroundColor: "#dc2626",
+    border: "1px solid #b91c1c",
+    borderRadius: "6px",
+    cursor: "pointer",
+    transition: "background-color 0.15s ease",
+  },
+  cancelButton: {
+    padding: "4px 10px",
+    fontSize: "12px",
+    fontWeight: "500",
+    color: "#374151",
+    backgroundColor: "#f3f4f6",
+    border: "1px solid #d1d5db",
     borderRadius: "6px",
     cursor: "pointer",
     transition: "background-color 0.15s ease",
