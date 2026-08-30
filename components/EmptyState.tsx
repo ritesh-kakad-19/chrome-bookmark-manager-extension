@@ -1,10 +1,11 @@
 import React from "react"
+import { Bookmark, Search } from "lucide-react"
 
 interface EmptyStateProps {
   mode?: "empty" | "no-results"
   title?: string
   subtitle?: string
-  icon?: string
+  icon?: React.ReactNode
 }
 
 export function EmptyState({
@@ -15,7 +16,8 @@ export function EmptyState({
 }: EmptyStateProps) {
   const isNoResults = mode === "no-results"
 
-  const displayIcon = icon || (isNoResults ? "🔍" : "🔖")
+  const displayIcon =
+    icon || (isNoResults ? <Search size={22} /> : <Bookmark size={22} />)
   const displayTitle =
     title || (isNoResults ? "No bookmarks found" : "No bookmarks yet")
   const displaySubtitle =
@@ -37,11 +39,11 @@ export function EmptyState({
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
-    padding: "32px 16px",
+    padding: "36px 20px",
     textAlign: "center",
-    backgroundColor: "#f9fafb",
-    borderRadius: "12px",
-    border: "1px dashed #e5e7eb",
+    backgroundColor: "rgba(22, 25, 34, 0.4)",
+    borderRadius: "14px",
+    border: "1px dashed rgba(255, 255, 255, 0.1)",
     margin: "8px 0",
     display: "flex",
     flexDirection: "column",
@@ -52,26 +54,30 @@ const styles: Record<string, React.CSSProperties> = {
     width: "48px",
     height: "48px",
     borderRadius: "50%",
-    backgroundColor: "#eff6ff",
+    backgroundColor: "rgba(99, 102, 241, 0.15)",
+    border: "1px solid rgba(99, 102, 241, 0.25)",
+    color: "#818cf8",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: "12px",
   },
   icon: {
-    fontSize: "24px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
   title: {
     fontSize: "15px",
-    fontWeight: "600",
-    color: "#1f2937",
+    fontWeight: 600,
+    color: "#f3f4f6",
     margin: "0 0 4px 0",
   },
   subtitle: {
     fontSize: "13px",
-    color: "#6b7280",
-    margin: "0",
-    maxWidth: "240px",
+    color: "#9ca3af",
+    margin: 0,
+    maxWidth: "260px",
     lineHeight: "1.4",
   },
 }

@@ -1,5 +1,7 @@
 import React, { useState } from "react"
+import { ExternalLink, Globe, Trash2 } from "lucide-react"
 import type { Bookmark } from "../types"
+import { formatRelativeDate } from "../utils/dateUtils"
 
 interface BookmarkCardProps {
   bookmark: Bookmark
@@ -9,6 +11,7 @@ interface BookmarkCardProps {
 export function BookmarkCard({ bookmark, onDelete }: BookmarkCardProps) {
   const [faviconError, setFaviconError] = useState<boolean>(false)
   const [isConfirming, setIsConfirming] = useState<boolean>(false)
+  const [isHovered, setIsHovered] = useState<boolean>(false)
 
   const getHostname = (urlStr: string): string => {
     try {
@@ -19,22 +22,8 @@ export function BookmarkCard({ bookmark, onDelete }: BookmarkCardProps) {
     }
   }
 
-  const formatDate = (isoStr: string): string => {
-    try {
-      const date = new Date(isoStr)
-      if (isNaN(date.getTime())) return ""
-      return date.toLocaleDateString(undefined, {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })
-    } catch {
-      return ""
-    }
-  }
-
   const hostname = getHostname(bookmark.url)
-  const formattedDate = formatDate(bookmark.createdAt)
+  const formattedDate = formatRelativeDate(bookmark.createdAt)
   const faviconUrl = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=32`
 
   const handleOpen = (e: React.MouseEvent) => {
@@ -62,8 +51,15 @@ export function BookmarkCard({ bookmark, onDelete }: BookmarkCardProps) {
   }
 
   return (
-    <div style={styles.card}>
-      <div style={styles.headerRow}>
+    <div
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{
+        ...styles.card,
+        ...(isHovered ? styles.cardHovered : {}),
+      }}
+    >
+      <div style={styles.topRow}>
         <div style={styles.faviconContainer}>
           {!faviconError ? (
             <img
@@ -73,9 +69,10 @@ export function BookmarkCard({ bookmark, onDelete }: BookmarkCardProps) {
               style={styles.favicon}
             />
           ) : (
-            <span style={styles.fallbackIcon}>🔖</span>
+            <Globe size={14} style={styles.fallbackIcon} />
           )}
         </div>
+
         <div style={styles.titleContainer}>
           <h4 style={styles.title} title={bookmark.title || "Untitled"}>
             {bookmark.title || "Untitled"}
@@ -86,29 +83,30 @@ export function BookmarkCard({ bookmark, onDelete }: BookmarkCardProps) {
         </div>
       </div>
 
-      <div style={styles.footerRow}>
+      <div style={styles.bottomRow}>
         {!isConfirming ? (
           <>
-            <span style={styles.date}>
-              {formattedDate ? `Saved: ${formattedDate}` : ""}
-            </span>
+            <span style={styles.date}>{formattedDate}</span>
 
             <div style={styles.actions}>
               <button
                 type="button"
                 onClick={handleOpen}
                 style={styles.openButton}
-                title="Open bookmark in new tab"
+                aria-label="Open bookmark in new tab"
+                title="Open bookmark"
               >
-                Open ↗
+                <span>Open</span>
+                <ExternalLink size={12} />
               </button>
               <button
                 type="button"
                 onClick={handleInitiateDelete}
                 style={styles.deleteButton}
+                aria-label="Delete bookmark"
                 title="Delete bookmark"
               >
-                Delete
+                <Trash2 size={13} />
               </button>
             </div>
           </>
@@ -120,7 +118,7 @@ export function BookmarkCard({ bookmark, onDelete }: BookmarkCardProps) {
                 type="button"
                 onClick={handleConfirmDelete}
                 style={styles.confirmDeleteButton}
-                title="Confirm deletion"
+                aria-label="Confirm deletion"
               >
                 Confirm
               </button>
@@ -128,7 +126,7 @@ export function BookmarkCard({ bookmark, onDelete }: BookmarkCardProps) {
                 type="button"
                 onClick={handleCancelDelete}
                 style={styles.cancelButton}
-                title="Cancel deletion"
+                aria-label="Cancel deletion"
               >
                 Cancel
               </button>
@@ -142,31 +140,39 @@ export function BookmarkCard({ bookmark, onDelete }: BookmarkCardProps) {
 
 const styles: Record<string, React.CSSProperties> = {
   card: {
-    backgroundColor: "#ffffff",
-    borderRadius: "10px",
-    border: "1px solid #e5e7eb",
-    padding: "12px 14px",
+    backgroundColor: "rgba(22, 25, 34, 0.6)",
+    borderRadius: "12px",
+    border: "1px solid rgba(255, 255, 255, 0.06)",
+    padding: "14px",
     display: "flex",
     flexDirection: "column",
-    gap: "10px",
-    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.04)",
-    transition: "border-color 0.15s ease, box-shadow 0.15s ease",
+    justifyContent: "space-between",
+    gap: "12px",
+    transition: "all 0.15s ease",
+    boxSizing: "border-box",
   },
-  headerRow: {
+  cardHovered: {
+    backgroundColor: "rgba(30, 34, 46, 0.8)",
+    borderColor: "rgba(99, 102, 241, 0.4)",
+    transform: "translateY(-2px)",
+    boxShadow: "0 8px 20px -4px rgba(0, 0, 0, 0.4), 0 0 12px rgba(99, 102, 241, 0.1)",
+  },
+  topRow: {
     display: "flex",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: "10px",
-    overflow: "hidden",
   },
   faviconContainer: {
-    width: "24px",
-    height: "24px",
-    borderRadius: "6px",
-    backgroundColor: "#f3f4f6",
+    width: "28px",
+    height: "28px",
+    borderRadius: "8px",
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    border: "1px solid rgba(255, 255, 255, 0.08)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
+    marginTop: "1px",
   },
   favicon: {
     width: "16px",
@@ -174,7 +180,7 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: "2px",
   },
   fallbackIcon: {
-    fontSize: "12px",
+    color: "#818cf8",
   },
   titleContainer: {
     display: "flex",
@@ -184,9 +190,9 @@ const styles: Record<string, React.CSSProperties> = {
   },
   title: {
     fontSize: "14px",
-    fontWeight: "600",
-    color: "#111827",
-    margin: "0",
+    fontWeight: 600,
+    color: "#f3f4f6",
+    margin: 0,
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
@@ -194,23 +200,22 @@ const styles: Record<string, React.CSSProperties> = {
   },
   domain: {
     fontSize: "12px",
-    color: "#6b7280",
+    color: "#9ca3af",
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
-    marginTop: "2px",
+    marginTop: "3px",
   },
-  footerRow: {
+  bottomRow: {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingTop: "6px",
-    borderTop: "1px solid #f9fafb",
+    paddingTop: "8px",
+    borderTop: "1px solid rgba(255, 255, 255, 0.04)",
   },
   date: {
     fontSize: "11px",
-    color: "#9ca3af",
-    fontWeight: "400",
+    color: "#6b7280",
   },
   actions: {
     display: "flex",
@@ -218,26 +223,31 @@ const styles: Record<string, React.CSSProperties> = {
     gap: "6px",
   },
   openButton: {
-    padding: "4px 10px",
-    fontSize: "12px",
-    fontWeight: "500",
-    color: "#2563eb",
-    backgroundColor: "#eff6ff",
-    border: "1px solid #bfdbfe",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "4px",
+    padding: "4px 8px",
+    fontSize: "11px",
+    fontWeight: 500,
+    color: "#818cf8",
+    backgroundColor: "rgba(99, 102, 241, 0.12)",
+    border: "1px solid rgba(99, 102, 241, 0.25)",
     borderRadius: "6px",
     cursor: "pointer",
-    transition: "background-color 0.15s ease",
+    transition: "all 0.15s ease",
   },
   deleteButton: {
-    padding: "4px 10px",
-    fontSize: "12px",
-    fontWeight: "500",
-    color: "#dc2626",
-    backgroundColor: "#fef2f2",
-    border: "1px solid #fecaca",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "4px 6px",
+    fontSize: "11px",
+    color: "#f87171",
+    backgroundColor: "rgba(239, 68, 68, 0.1)",
+    border: "1px solid rgba(239, 68, 68, 0.2)",
     borderRadius: "6px",
     cursor: "pointer",
-    transition: "background-color 0.15s ease",
+    transition: "all 0.15s ease",
   },
   confirmRow: {
     display: "flex",
@@ -246,30 +256,28 @@ const styles: Record<string, React.CSSProperties> = {
     width: "100%",
   },
   confirmText: {
-    fontSize: "12px",
-    fontWeight: "600",
-    color: "#dc2626",
+    fontSize: "11px",
+    fontWeight: 600,
+    color: "#f87171",
   },
   confirmDeleteButton: {
-    padding: "4px 10px",
-    fontSize: "12px",
-    fontWeight: "600",
+    padding: "3px 8px",
+    fontSize: "11px",
+    fontWeight: 600,
     color: "#ffffff",
-    backgroundColor: "#dc2626",
-    border: "1px solid #b91c1c",
-    borderRadius: "6px",
+    backgroundColor: "#ef4444",
+    border: "none",
+    borderRadius: "5px",
     cursor: "pointer",
-    transition: "background-color 0.15s ease",
   },
   cancelButton: {
-    padding: "4px 10px",
-    fontSize: "12px",
-    fontWeight: "500",
-    color: "#374151",
-    backgroundColor: "#f3f4f6",
-    border: "1px solid #d1d5db",
-    borderRadius: "6px",
+    padding: "3px 8px",
+    fontSize: "11px",
+    fontWeight: 500,
+    color: "#9ca3af",
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
+    border: "1px solid rgba(255, 255, 255, 0.08)",
+    borderRadius: "5px",
     cursor: "pointer",
-    transition: "background-color 0.15s ease",
   },
 }
