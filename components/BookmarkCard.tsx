@@ -1,4 +1,5 @@
 import React, { useState } from "react"
+import { motion, useReducedMotion } from "framer-motion"
 import { ExternalLink, Globe, Trash2 } from "lucide-react"
 import type { Bookmark } from "../types"
 import { formatRelativeDate } from "../utils/dateUtils"
@@ -11,7 +12,7 @@ interface BookmarkCardProps {
 export function BookmarkCard({ bookmark, onDelete }: BookmarkCardProps) {
   const [faviconError, setFaviconError] = useState<boolean>(false)
   const [isConfirming, setIsConfirming] = useState<boolean>(false)
-  const [isHovered, setIsHovered] = useState<boolean>(false)
+  const shouldReduceMotion = useReducedMotion()
 
   const getHostname = (urlStr: string): string => {
     try {
@@ -24,7 +25,7 @@ export function BookmarkCard({ bookmark, onDelete }: BookmarkCardProps) {
 
   const hostname = getHostname(bookmark.url)
   const formattedDate = formatRelativeDate(bookmark.createdAt)
-  const faviconUrl = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=32`
+  const faviconUrl = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=64`
 
   const handleOpen = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -51,58 +52,63 @@ export function BookmarkCard({ bookmark, onDelete }: BookmarkCardProps) {
   }
 
   return (
-    <div
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      style={{
-        ...styles.card,
-        ...(isHovered ? styles.cardHovered : {}),
-      }}
+    <motion.div
+      initial={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.95 }}
+      transition={{ duration: 0.14, ease: "easeOut" }}
+      className="relative flex flex-col justify-between p-4 rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-md transition-colors transition-shadow duration-150 ease-out hover:border-indigo-500/40 hover:bg-slate-900/80 hover:shadow-lg hover:shadow-indigo-500/10 min-w-0 box-border"
     >
-      <div style={styles.topRow}>
-        <div style={styles.faviconContainer}>
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0 overflow-hidden">
           {!faviconError ? (
             <img
               src={faviconUrl}
               alt=""
               onError={() => setFaviconError(true)}
-              style={styles.favicon}
+              className="w-4 h-4 rounded-sm object-contain"
             />
           ) : (
-            <Globe size={14} style={styles.fallbackIcon} />
+            <Globe size={16} className="text-indigo-400" />
           )}
         </div>
 
-        <div style={styles.titleContainer}>
-          <h4 style={styles.title} title={bookmark.title || "Untitled"}>
+        <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
+          <h4
+            className="text-[13.5px] font-semibold text-slate-100 truncate leading-snug"
+            title={bookmark.title || "Untitled"}
+          >
             {bookmark.title || "Untitled"}
           </h4>
-          <span style={styles.domain} title={bookmark.url}>
+          <span
+            className="text-[11.5px] text-slate-400 truncate mt-0.5"
+            title={bookmark.url}
+          >
             {hostname}
           </span>
         </div>
       </div>
 
-      <div style={styles.bottomRow}>
+      <div className="flex items-center justify-between pt-3 mt-3 border-t border-white/5">
         {!isConfirming ? (
           <>
-            <span style={styles.date}>{formattedDate}</span>
+            <span className="text-[11.5px] text-slate-400">{formattedDate}</span>
 
-            <div style={styles.actions}>
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={handleOpen}
-                style={styles.openButton}
+                className="px-2.5 py-1 text-[11px] font-medium text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 rounded-lg hover:bg-indigo-500/20 hover:border-indigo-500/40 hover:text-indigo-200 transition-colors duration-150 flex items-center gap-1 cursor-pointer"
                 aria-label="Open bookmark in new tab"
-                title="Open bookmark"
+                title="Open in new tab"
               >
                 <span>Open</span>
-                <ExternalLink size={12} />
+                <ExternalLink size={11} />
               </button>
               <button
                 type="button"
                 onClick={handleInitiateDelete}
-                style={styles.deleteButton}
+                className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 hover:border-rose-500/30 border border-white/10 bg-white/5 rounded-lg transition-colors duration-150 flex items-center justify-center cursor-pointer"
                 aria-label="Delete bookmark"
                 title="Delete bookmark"
               >
@@ -111,13 +117,13 @@ export function BookmarkCard({ bookmark, onDelete }: BookmarkCardProps) {
             </div>
           </>
         ) : (
-          <div style={styles.confirmRow}>
-            <span style={styles.confirmText}>Delete this bookmark?</span>
-            <div style={styles.actions}>
+          <div className="flex items-center justify-between w-full">
+            <span className="text-[11.5px] font-medium text-rose-400">Delete?</span>
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={handleConfirmDelete}
-                style={styles.confirmDeleteButton}
+                className="px-2 py-0.5 text-[11px] font-medium text-white bg-rose-500 hover:bg-rose-600 rounded-md transition-colors duration-150 cursor-pointer"
                 aria-label="Confirm deletion"
               >
                 Confirm
@@ -125,7 +131,7 @@ export function BookmarkCard({ bookmark, onDelete }: BookmarkCardProps) {
               <button
                 type="button"
                 onClick={handleCancelDelete}
-                style={styles.cancelButton}
+                className="px-2 py-0.5 text-[11px] font-medium text-slate-400 hover:text-slate-200 bg-white/5 border border-white/10 rounded-md transition-colors duration-150 cursor-pointer"
                 aria-label="Cancel deletion"
               >
                 Cancel
@@ -134,150 +140,6 @@ export function BookmarkCard({ bookmark, onDelete }: BookmarkCardProps) {
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   )
-}
-
-const styles: Record<string, React.CSSProperties> = {
-  card: {
-    backgroundColor: "rgba(22, 25, 34, 0.6)",
-    borderRadius: "12px",
-    border: "1px solid rgba(255, 255, 255, 0.06)",
-    padding: "14px",
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
-    gap: "12px",
-    transition: "all 0.15s ease",
-    boxSizing: "border-box",
-  },
-  cardHovered: {
-    backgroundColor: "rgba(30, 34, 46, 0.8)",
-    borderColor: "rgba(99, 102, 241, 0.4)",
-    transform: "translateY(-2px)",
-    boxShadow: "0 8px 20px -4px rgba(0, 0, 0, 0.4), 0 0 12px rgba(99, 102, 241, 0.1)",
-  },
-  topRow: {
-    display: "flex",
-    alignItems: "flex-start",
-    gap: "10px",
-  },
-  faviconContainer: {
-    width: "28px",
-    height: "28px",
-    borderRadius: "8px",
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
-    border: "1px solid rgba(255, 255, 255, 0.08)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-    marginTop: "1px",
-  },
-  favicon: {
-    width: "16px",
-    height: "16px",
-    borderRadius: "2px",
-  },
-  fallbackIcon: {
-    color: "#818cf8",
-  },
-  titleContainer: {
-    display: "flex",
-    flexDirection: "column",
-    overflow: "hidden",
-    flex: 1,
-  },
-  title: {
-    fontSize: "14px",
-    fontWeight: 600,
-    color: "#f3f4f6",
-    margin: 0,
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-    lineHeight: "1.3",
-  },
-  domain: {
-    fontSize: "12px",
-    color: "#9ca3af",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-    marginTop: "3px",
-  },
-  bottomRow: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingTop: "8px",
-    borderTop: "1px solid rgba(255, 255, 255, 0.04)",
-  },
-  date: {
-    fontSize: "11px",
-    color: "#6b7280",
-  },
-  actions: {
-    display: "flex",
-    alignItems: "center",
-    gap: "6px",
-  },
-  openButton: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "4px",
-    padding: "4px 8px",
-    fontSize: "11px",
-    fontWeight: 500,
-    color: "#818cf8",
-    backgroundColor: "rgba(99, 102, 241, 0.12)",
-    border: "1px solid rgba(99, 102, 241, 0.25)",
-    borderRadius: "6px",
-    cursor: "pointer",
-    transition: "all 0.15s ease",
-  },
-  deleteButton: {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "4px 6px",
-    fontSize: "11px",
-    color: "#f87171",
-    backgroundColor: "rgba(239, 68, 68, 0.1)",
-    border: "1px solid rgba(239, 68, 68, 0.2)",
-    borderRadius: "6px",
-    cursor: "pointer",
-    transition: "all 0.15s ease",
-  },
-  confirmRow: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    width: "100%",
-  },
-  confirmText: {
-    fontSize: "11px",
-    fontWeight: 600,
-    color: "#f87171",
-  },
-  confirmDeleteButton: {
-    padding: "3px 8px",
-    fontSize: "11px",
-    fontWeight: 600,
-    color: "#ffffff",
-    backgroundColor: "#ef4444",
-    border: "none",
-    borderRadius: "5px",
-    cursor: "pointer",
-  },
-  cancelButton: {
-    padding: "3px 8px",
-    fontSize: "11px",
-    fontWeight: 500,
-    color: "#9ca3af",
-    backgroundColor: "rgba(255, 255, 255, 0.06)",
-    border: "1px solid rgba(255, 255, 255, 0.08)",
-    borderRadius: "5px",
-    cursor: "pointer",
-  },
 }

@@ -1,4 +1,5 @@
-import type { PlasmoCSConfig } from "plasmo"
+import styleText from "data-text:./style.css"
+import type { PlasmoCSConfig, PlasmoGetStyle } from "plasmo"
 import React, { useEffect, useState } from "react"
 import { BookmarkManager } from "./components/BookmarkManager"
 
@@ -6,11 +7,16 @@ export const config: PlasmoCSConfig = {
   matches: ["<all_urls>"],
 }
 
+export const getStyle: PlasmoGetStyle = () => {
+  const style = document.createElement("style")
+  style.textContent = styleText
+  return style
+}
+
 export default function ContentOverlay() {
   const [isOpen, setIsOpen] = useState<boolean>(false)
 
   useEffect(() => {
-    // Listen for messages from background script when action icon is clicked
     const messageListener = (
       message: any,
       sender: chrome.runtime.MessageSender,
@@ -34,7 +40,6 @@ export default function ContentOverlay() {
   }, [])
 
   useEffect(() => {
-    // Keyboard shortcuts: Alt+B or Cmd+K / Ctrl+K to toggle, Esc to close
     const handleKeyDown = (e: KeyboardEvent) => {
       const isCmdOrCtrl = e.metaKey || e.ctrlKey
 
@@ -55,70 +60,60 @@ export default function ContentOverlay() {
     }
   }, [isOpen])
 
+  // BUG #2 FIX — Complete Background Page Scroll Lock
+  useEffect(() => {
+    if (!isOpen) return
+
+    const savedScrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop
+    const originalBodyOverflow = document.body.style.overflow
+    const originalDocOverflow = document.documentElement.style.overflow
+
+    document.body.style.overflow = "hidden"
+    document.documentElement.style.overflow = "hidden"
+
+    const preventScroll = (e: WheelEvent | TouchEvent) => {
+      const path = e.composedPath()
+      const isInsideScrollableGrid = path.some((el: EventTarget) => {
+        if (el instanceof HTMLElement) {
+          return el.classList.contains("grid-scrollbar")
+        }
+        return false
+      })
+
+      if (!isInsideScrollableGrid) {
+        if (e.cancelable) {
+          e.preventDefault()
+        }
+        e.stopPropagation()
+      }
+    }
+
+    window.addEventListener("wheel", preventScroll, { passive: false })
+    window.addEventListener("touchmove", preventScroll, { passive: false })
+
+    return () => {
+      document.body.style.overflow = originalBodyOverflow
+      document.documentElement.style.overflow = originalDocOverflow
+      window.removeEventListener("wheel", preventScroll)
+      window.removeEventListener("touchmove", preventScroll)
+      window.scrollTo(0, savedScrollY)
+    }
+  }, [isOpen])
+
   if (!isOpen) return null
 
   return (
-    <div style={styles.backdrop} onClick={() => setIsOpen(false)}>
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        @keyframes fadeInScale {
-          0% {
-            opacity: 0;
-            transform: scale(0.96);
-          }
-          100% {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-        /* Custom scrollbar styling */
-        ::-webkit-scrollbar {
-          width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-          background: rgba(255, 255, 255, 0.03);
-          border-radius: 3px;
-        }
-        ::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.15);
-          border-radius: 3px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 255, 255, 0.25);
-        }
-      `}</style>
+    <div
+      className="fixed inset-0 z-[2147483647] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md overflow-hidden select-none"
+      onClick={() => setIsOpen(false)}
+    >
+      {/* Ambient background glows */}
+      <div className="absolute -bottom-20 -left-20 w-[450px] h-[450px] rounded-full bg-blue-600/20 blur-[80px] pointer-events-none" />
+      <div className="absolute -bottom-20 -right-20 w-[450px] h-[450px] rounded-full bg-indigo-600/20 blur-[80px] pointer-events-none" />
 
-      <div style={styles.modalWrapper} onClick={(e) => e.stopPropagation()}>
+      <div onClick={(e) => e.stopPropagation()}>
         <BookmarkManager onClose={() => setIsOpen(false)} />
       </div>
     </div>
   )
-}
-
-const styles: Record<string, React.CSSProperties> = {
-  backdrop: {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    width: "100vw",
-    height: "100vh",
-    backgroundColor: "rgba(4, 5, 8, 0.75)",
-    backdropFilter: "blur(8px)",
-    WebkitBackdropFilter: "blur(8px)",
-    zIndex: 2147483647,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "24px",
-    boxSizing: "border-box",
-  },
-  modalWrapper: {
-    position: "relative",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
 }

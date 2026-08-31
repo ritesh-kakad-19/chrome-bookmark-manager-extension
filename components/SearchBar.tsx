@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React from "react"
 import { Search, X } from "lucide-react"
 
 interface SearchBarProps {
@@ -8,8 +8,6 @@ interface SearchBarProps {
 }
 
 export function SearchBar({ value, onChange, onClear }: SearchBarProps) {
-  const [isFocused, setIsFocused] = useState<boolean>(false)
-
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Escape" && value) {
       e.stopPropagation()
@@ -18,103 +16,32 @@ export function SearchBar({ value, onChange, onClear }: SearchBarProps) {
   }
 
   return (
-    <div
-      style={{
-        ...styles.wrapper,
-        ...(isFocused ? styles.wrapperFocused : {}),
-      }}
-    >
-      <Search size={15} style={styles.searchIcon} aria-hidden="true" />
+    <div className="relative flex items-center w-full h-10 px-3.5 bg-slate-900/60 border border-white/10 rounded-xl transition-all duration-150 focus-within:border-indigo-500/60 focus-within:bg-slate-900/90 focus-within:shadow-md focus-within:shadow-indigo-500/10">
+      <Search size={15} className="text-slate-400 mr-2.5 shrink-0" aria-hidden="true" />
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={handleKeyDown}
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
         placeholder="Search bookmarks..."
         aria-label="Search bookmarks"
-        style={styles.input}
+        className="flex-1 bg-transparent border-none outline-none text-[13.5px] text-slate-100 placeholder-slate-400 font-sans"
       />
       {value ? (
         <button
           type="button"
           onClick={onClear}
           aria-label="Clear search"
-          style={styles.clearButton}
+          className="w-5 h-5 rounded-full bg-white/10 hover:bg-white/20 text-slate-400 hover:text-white flex items-center justify-center transition-all cursor-pointer ml-2"
           title="Clear search"
         >
-          <X size={13} />
+          <X size={12} />
         </button>
       ) : (
-        <span style={styles.shortcutKey}>⌘K</span>
+        <span className="px-1.5 py-0.5 text-[11px] font-medium text-slate-400 bg-white/5 border border-white/10 rounded-md leading-none ml-2">
+          ⌘K
+        </span>
       )}
     </div>
   )
-}
-
-const styles: Record<string, React.CSSProperties> = {
-  wrapper: {
-    display: "flex",
-    alignItems: "center",
-    backgroundColor: "rgba(22, 25, 34, 0.6)",
-    border: "1px solid rgba(255, 255, 255, 0.08)",
-    borderRadius: "10px",
-    padding: "0 12px",
-    height: "40px",
-    transition: "all 0.15s ease",
-    boxSizing: "border-box",
-    width: "100%",
-  },
-  wrapperFocused: {
-    backgroundColor: "rgba(26, 30, 42, 0.85)",
-    borderColor: "rgba(99, 102, 241, 0.6)",
-    boxShadow: "0 0 0 3px rgba(99, 102, 241, 0.15)",
-  },
-  searchIcon: {
-    color: "#9ca3af",
-    marginRight: "10px",
-    flexShrink: 0,
-  },
-  input: {
-    flex: 1,
-    border: "none",
-    background: "transparent",
-    outline: "none",
-    fontSize: "13.5px",
-    color: "#f3f4f6",
-    width: "100%",
-    padding: 0,
-    margin: 0,
-    fontFamily: "inherit",
-  },
-  clearButton: {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    width: "20px",
-    height: "20px",
-    padding: 0,
-    margin: 0,
-    background: "rgba(255, 255, 255, 0.06)",
-    border: "none",
-    borderRadius: "50%",
-    color: "#9ca3af",
-    cursor: "pointer",
-    flexShrink: 0,
-    marginLeft: "8px",
-    transition: "all 0.15s ease",
-  },
-  shortcutKey: {
-    fontSize: "11px",
-    fontWeight: 500,
-    color: "#6b7280",
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
-    border: "1px solid rgba(255, 255, 255, 0.08)",
-    borderRadius: "4px",
-    padding: "2px 6px",
-    lineHeight: 1,
-    flexShrink: 0,
-    marginLeft: "8px",
-  },
 }

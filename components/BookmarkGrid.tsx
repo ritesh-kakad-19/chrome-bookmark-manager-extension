@@ -1,13 +1,19 @@
 import React from "react"
+import { AnimatePresence } from "framer-motion"
 import type { Bookmark } from "../types"
 import { BookmarkCard } from "./BookmarkCard"
 
 interface BookmarkGridProps {
   bookmarks: Bookmark[]
   onDelete: (id: string) => void
+  searchQuery?: string
 }
 
-export function BookmarkGrid({ bookmarks, onDelete }: BookmarkGridProps) {
+export function BookmarkGrid({
+  bookmarks,
+  onDelete,
+  searchQuery = "",
+}: BookmarkGridProps) {
   // Sort newest first based on createdAt
   const sortedBookmarks = [...bookmarks].sort((a, b) => {
     const timeA = new Date(a.createdAt).getTime() || 0
@@ -16,26 +22,16 @@ export function BookmarkGrid({ bookmarks, onDelete }: BookmarkGridProps) {
   })
 
   return (
-    <div style={styles.gridContainer}>
-      {sortedBookmarks.map((bookmark) => (
-        <BookmarkCard
-          key={bookmark.id}
-          bookmark={bookmark}
-          onDelete={onDelete}
-        />
-      ))}
+    <div className="grid grid-cols-2 gap-3.5 overflow-y-auto max-h-[360px] pr-1.5 -mr-1.5 grid-scrollbar">
+      <AnimatePresence mode="sync">
+        {sortedBookmarks.map((bookmark) => (
+          <BookmarkCard
+            key={`${searchQuery}-${bookmark.id}`}
+            bookmark={bookmark}
+            onDelete={onDelete}
+          />
+        ))}
+      </AnimatePresence>
     </div>
   )
-}
-
-const styles: Record<string, React.CSSProperties> = {
-  gridContainer: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-    gap: "12px",
-    maxHeight: "380px",
-    overflowY: "auto",
-    paddingRight: "6px",
-    marginRight: "-6px",
-  },
 }

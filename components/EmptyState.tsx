@@ -27,57 +27,16 @@ export function EmptyState({
       : "Save your first webpage to see it here.")
 
   return (
-    <div style={styles.container}>
-      <div style={styles.iconWrapper}>
-        <span style={styles.icon}>{displayIcon}</span>
+    <div className="flex flex-col items-center justify-center p-10 text-center bg-slate-900/40 border border-dashed border-white/10 rounded-2xl my-2 flex-1">
+      <div className="w-12 h-12 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center mb-3.5 shadow-lg shadow-indigo-500/15">
+        {displayIcon}
       </div>
-      <h3 style={styles.title}>{displayTitle}</h3>
-      <p style={styles.subtitle}>{displaySubtitle}</p>
+      <h3 className="text-[15px] font-semibold text-slate-100 mb-1">
+        {displayTitle}
+      </h3>
+      <p className="text-[13px] text-slate-400 max-w-[260px] leading-relaxed">
+        {displaySubtitle}
+      </p>
     </div>
   )
-}
-
-const styles: Record<string, React.CSSProperties> = {
-  container: {
-    padding: "36px 20px",
-    textAlign: "center",
-    backgroundColor: "rgba(22, 25, 34, 0.4)",
-    borderRadius: "14px",
-    border: "1px dashed rgba(255, 255, 255, 0.1)",
-    margin: "8px 0",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  iconWrapper: {
-    width: "48px",
-    height: "48px",
-    borderRadius: "50%",
-    backgroundColor: "rgba(99, 102, 241, 0.15)",
-    border: "1px solid rgba(99, 102, 241, 0.25)",
-    color: "#818cf8",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: "12px",
-  },
-  icon: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  title: {
-    fontSize: "15px",
-    fontWeight: 600,
-    color: "#f3f4f6",
-    margin: "0 0 4px 0",
-  },
-  subtitle: {
-    fontSize: "13px",
-    color: "#9ca3af",
-    margin: 0,
-    maxWidth: "260px",
-    lineHeight: "1.4",
-  },
 }
