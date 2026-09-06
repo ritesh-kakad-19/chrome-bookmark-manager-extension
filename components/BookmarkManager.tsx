@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { Check, Plus, AlertTriangle, Sparkles } from "lucide-react"
+import { Check, Plus, AlertTriangle, Sparkles, Star } from "lucide-react"
 import type { Bookmark, StorageData } from "../types"
 import { BookmarkGrid } from "./BookmarkGrid"
 import { EmptyState } from "./EmptyState"
@@ -11,7 +11,7 @@ interface BookmarkManagerProps {
   onClose: () => void
 }
 
-type FilterTab = "all" | "recent"
+type FilterTab = "all" | "favorites" | "recent"
 
 export function BookmarkManager({ onClose }: BookmarkManagerProps) {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
@@ -127,6 +127,7 @@ export function BookmarkManager({ onClose }: BookmarkManagerProps) {
         title: currentTitle || "Untitled",
         url: currentUrl,
         createdAt: new Date().toISOString(),
+        isFavorite: false,
       }
 
       const updatedBookmarks = [newBookmark, ...existingBookmarks]
@@ -163,6 +164,23 @@ export function BookmarkManager({ onClose }: BookmarkManagerProps) {
     }
   }
 
+  const handleToggleFavorite = async (id: string) => {
+    try {
+      const updated = bookmarks.map((b) =>
+        b.id === id ? { ...b, isFavorite: !b.isFavorite } : b
+      )
+      setBookmarks(updated)
+      if (chrome?.storage?.local) {
+        await chrome.storage.local.set({ bookmarks: updated })
+      }
+    } catch (err: any) {
+      console.error("Failed to toggle favorite:", err)
+      setErrorMessage("Failed to update favorite status.")
+    }
+  }
+
+  const favoritesCount = bookmarks.filter((b) => Boolean(b.isFavorite)).length
+
   // Filter bookmarks
   const normalizedQuery = searchQuery.trim().toLowerCase()
   const filteredBookmarks = bookmarks.filter((b) => {
@@ -174,10 +192,12 @@ export function BookmarkManager({ onClose }: BookmarkManagerProps) {
     }
 
     // Tab filter
-    if (activeTab === "recent") {
+    if (activeTab === "favorites") {
+      if (!b.isFavorite) return false
+    } else if (activeTab === "recent") {
       const created = new Date(b.createdAt).getTime() || 0
       const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000
-      return created >= oneDayAgo
+      if (created < oneDayAgo) return false
     }
 
     return true
@@ -262,6 +282,35 @@ export function BookmarkManager({ onClose }: BookmarkManagerProps) {
 
           <button
             type="button"
+            onClick={() => setActiveTab("favorites")}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 text-[12.5px] font-medium rounded-full border transition-all cursor-pointer ${
+              activeTab === "favorites"
+                ? "text-white font-semibold bg-amber-500/20 border-amber-500/40 shadow-sm shadow-amber-500/15"
+                : "text-slate-400 bg-white/5 border-white/10 hover:text-slate-200"
+            }`}
+          >
+            <Star
+              size={13}
+              className={
+                activeTab === "favorites"
+                  ? "text-amber-400 fill-amber-400"
+                  : "text-slate-400"
+              }
+            />
+            <span>Favorites</span>
+            <span
+              className={`text-[11px] px-1.5 py-0.2 rounded-full ${
+                activeTab === "favorites"
+                  ? "text-amber-300 bg-amber-500/30"
+                  : "text-slate-400 bg-white/10"
+              }`}
+            >
+              {favoritesCount}
+            </span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveTab("recent")}
             className={`flex items-center gap-1.5 px-3.5 py-1.5 text-[12.5px] font-medium rounded-full border transition-all cursor-pointer ${
               activeTab === "recent"
@@ -293,12 +342,15 @@ export function BookmarkManager({ onClose }: BookmarkManagerProps) {
           </div>
         ) : bookmarks.length === 0 ? (
           <EmptyState mode="empty" />
+        ) : activeTab === "favorites" && favoritesCount === 0 ? (
+          <EmptyState mode="no-favorites" />
         ) : filteredBookmarks.length === 0 ? (
           <EmptyState mode="no-results" />
         ) : (
           <BookmarkGrid
             bookmarks={filteredBookmarks}
             onDelete={handleDeleteBookmark}
+            onToggleFavorite={handleToggleFavorite}
             searchQuery={searchQuery}
           />
         )}

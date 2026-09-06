@@ -3,8 +3,10 @@ export interface Bookmark {
   title: string
   url: string
   createdAt: string
+  isFavorite?: boolean
 }
 
 export interface StorageData {
   bookmarks?: Bookmark[]
 }
+

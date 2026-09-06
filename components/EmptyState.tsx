@@ -1,8 +1,8 @@
 import React from "react"
-import { Bookmark, Search } from "lucide-react"
+import { Bookmark, Search, Star } from "lucide-react"
 
 interface EmptyStateProps {
-  mode?: "empty" | "no-results"
+  mode?: "empty" | "no-results" | "no-favorites"
   title?: string
   subtitle?: string
   icon?: React.ReactNode
@@ -15,14 +15,29 @@ export function EmptyState({
   icon,
 }: EmptyStateProps) {
   const isNoResults = mode === "no-results"
+  const isNoFavorites = mode === "no-favorites"
 
   const displayIcon =
-    icon || (isNoResults ? <Search size={22} /> : <Bookmark size={22} />)
+    icon ||
+    (isNoFavorites ? (
+      <Star size={22} className="text-amber-400 fill-amber-400" />
+    ) : isNoResults ? (
+      <Search size={22} />
+    ) : (
+      <Bookmark size={22} />
+    ))
   const displayTitle =
-    title || (isNoResults ? "No bookmarks found" : "No bookmarks yet")
+    title ||
+    (isNoFavorites
+      ? "No favorite bookmarks"
+      : isNoResults
+      ? "No bookmarks found"
+      : "No bookmarks yet")
   const displaySubtitle =
     subtitle ||
-    (isNoResults
+    (isNoFavorites
+      ? "Star your most useful bookmarks to find them quickly."
+      : isNoResults
       ? "Try a different search term."
       : "Save your first webpage to see it here.")
 

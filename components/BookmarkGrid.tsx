@@ -6,12 +6,14 @@ import { BookmarkCard } from "./BookmarkCard"
 interface BookmarkGridProps {
   bookmarks: Bookmark[]
   onDelete: (id: string) => void
+  onToggleFavorite: (id: string) => void
   searchQuery?: string
 }
 
 export function BookmarkGrid({
   bookmarks,
   onDelete,
+  onToggleFavorite,
   searchQuery = "",
 }: BookmarkGridProps) {
   // Sort newest first based on createdAt
@@ -29,6 +31,7 @@ export function BookmarkGrid({
             key={`${searchQuery}-${bookmark.id}`}
             bookmark={bookmark}
             onDelete={onDelete}
+            onToggleFavorite={onToggleFavorite}
           />
         ))}
       </AnimatePresence>

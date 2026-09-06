@@ -1,18 +1,25 @@
 import React, { useState } from "react"
 import { motion, useReducedMotion } from "framer-motion"
-import { ExternalLink, Globe, Trash2 } from "lucide-react"
+import { ExternalLink, Globe, Star, Trash2 } from "lucide-react"
 import type { Bookmark } from "../types"
 import { formatRelativeDate } from "../utils/dateUtils"
 
 interface BookmarkCardProps {
   bookmark: Bookmark
   onDelete: (id: string) => void
+  onToggleFavorite: (id: string) => void
 }
 
-export function BookmarkCard({ bookmark, onDelete }: BookmarkCardProps) {
+export function BookmarkCard({
+  bookmark,
+  onDelete,
+  onToggleFavorite,
+}: BookmarkCardProps) {
   const [faviconError, setFaviconError] = useState<boolean>(false)
   const [isConfirming, setIsConfirming] = useState<boolean>(false)
   const shouldReduceMotion = useReducedMotion()
+
+  const isFavorite = Boolean(bookmark.isFavorite)
 
   const getHostname = (urlStr: string): string => {
     try {
@@ -34,6 +41,11 @@ export function BookmarkCard({ bookmark, onDelete }: BookmarkCardProps) {
     } else if (bookmark.url) {
       window.open(bookmark.url, "_blank")
     }
+  }
+
+  const handleToggleFavorite = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    onToggleFavorite(bookmark.id)
   }
 
   const handleInitiateDelete = (e: React.MouseEvent) => {
@@ -104,6 +116,22 @@ export function BookmarkCard({ bookmark, onDelete }: BookmarkCardProps) {
               >
                 <span>Open</span>
                 <ExternalLink size={11} />
+              </button>
+              <button
+                type="button"
+                onClick={handleToggleFavorite}
+                className={`p-1.5 border rounded-lg transition-colors duration-150 flex items-center justify-center cursor-pointer ${
+                  isFavorite
+                    ? "text-amber-400 bg-amber-400/10 border-amber-400/30 hover:bg-amber-400/20 hover:border-amber-400/50"
+                    : "text-slate-400 hover:text-amber-300 hover:bg-amber-400/10 hover:border-amber-400/30 border-white/10 bg-white/5"
+                }`}
+                aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+              >
+                <Star
+                  size={13}
+                  className={isFavorite ? "fill-amber-400 text-amber-400" : ""}
+                />
               </button>
               <button
                 type="button"
